@@ -6,6 +6,8 @@ export class DataList extends HTMLElement {
         data: { type: Array },
         fetching: { type: Boolean },
         error: { type: String },
+        currentPage: { type: Number },
+        itemsPerPage: { type: Number },
     };
 
     constructor() {
@@ -13,6 +15,8 @@ export class DataList extends HTMLElement {
         this.data = [];
         this.fetching = true;
         this.error = null;
+        this.currentPage = 1;
+        this.itemsPerPage = 10;
     }
 
     connectedCallback() {
@@ -41,21 +45,102 @@ export class DataList extends HTMLElement {
             return;
         }
 
-        this.data.forEach((item) => {
-            console.log({ item });
+        const start = (this.currentPage - 1) * this.itemsPerPage;
+        const end = start + this.itemsPerPage;
+        const currentItems = this.data.slice(start, end);
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'pt-4';
+
+        currentItems.forEach((item) => {
             const ul = document.createElement('ul');
+            ul.className = 'mb-4 p-4 border rounded bg-gray-50';
 
             const nameLi = document.createElement('li');
-            nameLi.textContent = item.applicationName;
+            nameLi.textContent = item.locationName;
 
             const streetLi = document.createElement('li');
-            streetLi.textContent = item.applicationStreet;
+            streetLi.textContent = item.locationStreet;
 
             ul.appendChild(nameLi);
             ul.appendChild(streetLi);
 
-            this.appendChild(ul);
+            wrapper.appendChild(ul);
         });
+
+        this.appendChild(wrapper);
+
+        this.renderPagination();
+    }
+
+    renderPagination() {
+        const totalPages = Math.ceil(this.data.length / this.itemsPerPage);
+        if (totalPages <= 1) return;
+
+        const nav = document.createElement('nav');
+        nav.className = 'flex gap-2 mt-4 flex-wrap justify-center';
+
+        // Helper to create a page button
+        const createButton = (
+            label,
+            page,
+            isActive = false,
+            disabled = false
+        ) => {
+            const btn = document.createElement('button');
+            btn.textContent = label;
+            btn.className = `px-3 py-1 rounded border transition ${
+                isActive
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white hover:bg-gray-100'
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`;
+
+            if (!disabled) {
+                btn.addEventListener('click', () => {
+                    this.currentPage = page;
+                    this.render();
+                    this.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            }
+
+            return btn;
+        };
+
+        // Previous button
+        nav.appendChild(
+            createButton(
+                '« Prev',
+                this.currentPage - 1,
+                false,
+                this.currentPage === 1
+            )
+        );
+
+        // Pagination logic
+        const maxVisible = 7;
+        let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
+        let end = start + maxVisible - 1;
+
+        if (end > totalPages) {
+            end = totalPages;
+            start = Math.max(1, end - maxVisible + 1);
+        }
+
+        for (let i = start; i <= end; i++) {
+            nav.appendChild(createButton(i, i, i === this.currentPage));
+        }
+
+        // Next button
+        nav.appendChild(
+            createButton(
+                'Next »',
+                this.currentPage + 1,
+                false,
+                this.currentPage === totalPages
+            )
+        );
+
+        this.appendChild(nav);
     }
 }
 
