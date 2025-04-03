@@ -1,5 +1,6 @@
 // components/list.js
 import { fetchBerufsberatungData } from '../lib/fetchData.js';
+import { fetchCantonData } from '../lib/fetchCantons.js';
 
 export class DataList extends HTMLElement {
     static properties = {
@@ -8,6 +9,9 @@ export class DataList extends HTMLElement {
         error: { type: String },
         currentPage: { type: Number },
         itemsPerPage: { type: Number },
+        filteredData: { type: Array },
+        cantons: { type: Object },
+        selectedCanton: { type: String },
     };
 
     constructor() {
@@ -17,6 +21,9 @@ export class DataList extends HTMLElement {
         this.error = null;
         this.currentPage = 1;
         this.itemsPerPage = 10;
+        this.filteredData = [];
+        this.cantons = {};
+        this.selectedCanton = null;
     }
 
     connectedCallback() {
@@ -26,12 +33,42 @@ export class DataList extends HTMLElement {
     async fetchData() {
         try {
             this.data = await fetchBerufsberatungData();
+            const zipToCanton = await fetchCantonData();
+            this.cantons = this.groupCantons(zipToCanton);
+            this.filteredData = this.data;
         } catch (error) {
             this.error = error.message;
         } finally {
             this.fetching = false;
             this.render();
         }
+    }
+
+    groupCantons(zipMap) {
+        const cantonGroups = {};
+        for (const [zip, canton] of Object.entries(zipMap)) {
+            if (!cantonGroups[canton]) {
+                cantonGroups[canton] = new Set();
+            }
+            cantonGroups[canton].add(zip);
+        }
+        return cantonGroups;
+    }
+
+    handleCantonChange(cantonCode) {
+        this.selectedCanton = cantonCode;
+        this.currentPage = 1;
+
+        if (!cantonCode || !this.cantons[cantonCode]) {
+            this.filteredData = this.data;
+        } else {
+            const zipSet = this.cantons[cantonCode];
+            this.filteredData = this.data.filter((item) =>
+                zipSet.has(String(item.locationZipCode))
+            );
+        }
+
+        this.render();
     }
 
     render() {
@@ -45,21 +82,53 @@ export class DataList extends HTMLElement {
             return;
         }
 
+        this.renderFilterDropdown(); // ← Add this line!
+
         const start = (this.currentPage - 1) * this.itemsPerPage;
         const end = start + this.itemsPerPage;
-        const currentItems = this.data.slice(start, end);
+        const currentItems = this.filteredData.slice(start, end);
 
         const wrapper = document.createElement('div');
         wrapper.className = 'pt-4';
 
         currentItems.forEach((item) => {
-            console.log(item.professionNameDeMf);
             wrapper.appendChild(this.renderCard(item));
         });
 
         this.appendChild(wrapper);
 
-        this.renderPagination();
+        this.renderPagination(); // remains unchanged
+    }
+
+    renderFilterDropdown() {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'mb-4';
+
+        const label = document.createElement('label');
+        label.textContent = 'Kanton wählen:';
+        label.className = 'mr-2';
+
+        const select = document.createElement('select');
+        select.className = 'p-2 border rounded';
+        select.innerHTML = `<option value="">Alle Kantone</option>`;
+
+        Object.keys(this.cantons)
+            .sort()
+            .forEach((code) => {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = code; // Optional: replace with full name mapping if desired
+                select.appendChild(option);
+            });
+
+        select.value = this.selectedCanton || '';
+        select.addEventListener('change', (e) =>
+            this.handleCantonChange(e.target.value)
+        );
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(select);
+        this.appendChild(wrapper);
     }
 
     renderCard(item) {
@@ -90,7 +159,10 @@ export class DataList extends HTMLElement {
     }
 
     renderPagination() {
-        const totalPages = Math.ceil(this.data.length / this.itemsPerPage);
+        // const totalPages = Math.ceil(this.data.length / this.itemsPerPage);
+        const totalPages = Math.ceil(
+            this.filteredData.length / this.itemsPerPage
+        );
         if (totalPages <= 1) return;
 
         const nav = document.createElement('nav');
