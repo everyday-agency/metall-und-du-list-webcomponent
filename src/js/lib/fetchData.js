@@ -1,6 +1,4 @@
-export async function fetchBerufsberatungData(
-    path = 'src/data/berufsberatung.json'
-) {
+export async function fetchBerufsberatungData(path = 'berufsberatung.json') {
     try {
         const response = await fetch(path);
         if (!response.ok) {
