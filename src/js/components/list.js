@@ -53,6 +53,7 @@ export class DataList extends HTMLElement {
         wrapper.className = 'pt-4';
 
         currentItems.forEach((item) => {
+            console.log(item.professionNameDeMf);
             wrapper.appendChild(this.renderCard(item));
         });
 
@@ -65,15 +66,25 @@ export class DataList extends HTMLElement {
         const ul = document.createElement('ul');
         ul.className = 'mb-4 p-4 border rounded bg-gray-50';
 
+        const titleLi = document.createElement('li');
+        titleLi.textContent = item.professionNameDeMf;
+        titleLi.className = 'font-bold text-lg';
+
         const nameLi = document.createElement('li');
         nameLi.textContent = item.locationName;
-        nameLi.className = 'font-bold text-lg';
 
         const streetLi = document.createElement('li');
-        streetLi.textContent = item.locationStreet;
+        streetLi.textContent =
+            item.locationStreet + ' ' + item.locationHouseNumber;
 
+        const zipCodeLi = document.createElement('li');
+        zipCodeLi.textContent =
+            item.locationZipCode + ' ' + item.locationLocalityNameDe;
+
+        ul.appendChild(titleLi);
         ul.appendChild(nameLi);
         ul.appendChild(streetLi);
+        ul.appendChild(zipCodeLi);
 
         return ul;
     }
