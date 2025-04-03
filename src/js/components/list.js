@@ -94,7 +94,7 @@ export class DataList extends HTMLElement {
         if (totalPages <= 1) return;
 
         const nav = document.createElement('nav');
-        nav.className = 'flex gap-2 mt-4 flex-wrap justify-center';
+        nav.className = 'flex gap-2 my-4 flex-wrap justify-center';
 
         // Helper to create a page button
         const createButton = (
