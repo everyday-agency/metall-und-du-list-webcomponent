@@ -1,4 +1,4 @@
-import './styles.scss';
+import '../scss/styles.css';
 
 class CoffeeControlPanel extends HTMLElement {
     constructor() {
