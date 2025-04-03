@@ -40,13 +40,22 @@ export class DataList extends HTMLElement {
             this.innerHTML = `<p>Error: ${this.error}</p>`;
             return;
         }
-        const ul = document.createElement('ul');
+
         this.data.forEach((item) => {
-            const li = document.createElement('li');
-            li.textContent = item.applicationName;
-            ul.appendChild(li);
+            console.log({ item });
+            const ul = document.createElement('ul');
+
+            const nameLi = document.createElement('li');
+            nameLi.textContent = item.applicationName;
+
+            const streetLi = document.createElement('li');
+            streetLi.textContent = item.applicationStreet;
+
+            ul.appendChild(nameLi);
+            ul.appendChild(streetLi);
+
+            this.appendChild(ul);
         });
-        this.appendChild(ul);
     }
 }
 
