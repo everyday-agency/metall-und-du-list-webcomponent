@@ -1,9 +1,9 @@
 export function renderModal(item) {
     const template = `
         <div class="modal fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-            <div class="bg-white p-6 rounded shadow-lg w-3/4 relative">
+            <div class="bg-white m-4 lg:m-0 py-10 px-6 lg:p-6 rounded shadow-lg w-full xl:max-w-[57.5rem] lg:w-3/4 relative">
                 <button class="close-modal absolute top-2 right-2 text-gray-600 text-3xl pr-3">×</button>
-                <div class="flex flex-col lg:flex-row gap-4 justify-between items-center p-6">
+                <div class="flex flex-col lg:flex-row gap-4 lg:justify-between lg:items-center lg:p-6">
                     <div>
                         <p class="text-sm">${item.professionNameDeMf}</p>
                         <h2 class="font-bold text-2xl">${item.locationName}</h2>
@@ -12,18 +12,18 @@ export function renderModal(item) {
     }</p>
                         <p>${item.locationZipCode} 
                         ${item.locationLocalityNameDe}</p>
-                    <div class="mt-4">
+                    <div class="mt-6 lg:mt-4">
                         <h3 class="font-bold">Kontaktdaten Bewerbung</h3>
                         <p>${renderContactName(item)}</p>
                         <p>${renderEmail(item)}</p>
                         <p>${renderPhone(item)}</p>
                     </div>
                 </div>
-                <div>
+                <div class="mt-8 lg:mt-0">
                     <ul class="flex flex-col lg:items-end">
                         ${renderAdditionalInfromation(item)}
                     </ul>
-                    <div class="mt-4">                        
+                    <div class="mt-8 lg:mt-4">                        
                         ${renderURL(item)}
                     </div>
                 </div>
@@ -112,13 +112,19 @@ function formatPhoneNumber(phoneNumber) {
 }
 
 function renderAdditionalInfromation(item) {
-    const additionalInfoHTML = `<li class="flex items-center gap-2">Offene Lehrstelle 2025 ${
-        item.apprenticeshipPlaceSchoolYears
-            ? '<span class="flex bg-green-500 w-[1rem] h-[1rem] rounded-full"></span>'
-            : '<span class="flex bg-red-500 w-[1rem] h-[1rem] rounded-full"></span>'
-    }</li>
-            <li class="flex items-center gap-2">Schnupperlehre auf Anfrage möglich <span class="flex bg-green-500 w-[1rem] h-[1rem] rounded-full"></span> </li>
-            `;
+    const additionalInfoHTML = `
+            <li class="flex items-center gap-2 lg:flex-row-reverse">
+                <span class="${
+                    item.apprenticeshipPlaceSchoolYears
+                        ? 'bg-green-500'
+                        : 'bg-red-500'
+                } w-[1rem] h-[1rem] rounded-full flex-shrink-0"></span>
+                <span>Offene Lehrstelle 2025</span>
+            </li>
+            <li class="flex items-center gap-2 lg:flex-row-reverse"> <span class="flex bg-green-500 w-[1rem] h-[1rem] rounded-full flex-shrink-0"></span>
+            <span>Schnupperlehre auf Anfrage möglich</span> </li>
+        `;
+
     return additionalInfoHTML;
 }
 

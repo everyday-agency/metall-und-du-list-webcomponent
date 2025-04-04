@@ -2,12 +2,16 @@ import { renderModal } from './Modal';
 
 export function renderCard(item) {
     const additionalInfoHTML = `
-            <li class="flex items-center gap-2">Offene Lehrstelle 2025 ${
-                item.apprenticeshipPlaceSchoolYears
-                    ? '<span class="flex bg-green-500 w-[1rem] h-[1rem] rounded-full"></span>'
-                    : '<span class="flex bg-red-500 w-[1rem] h-[1rem] rounded-full"></span>'
-            }</li>
-            <li class="flex items-center gap-2">Schnupperlehre auf Anfrage möglich <span class="flex bg-green-500 w-[1rem] h-[1rem] rounded-full"></span> </li>
+            <li class="flex items-center gap-2 lg:flex-row-reverse">
+                <span class="${
+                    item.apprenticeshipPlaceSchoolYears
+                        ? 'bg-green-500'
+                        : 'bg-red-500'
+                } w-[1rem] h-[1rem] rounded-full flex-shrink-0"></span>
+                <span>Offene Lehrstelle 2025</span>
+            </li>
+            <li class="flex items-center gap-2 lg:flex-row-reverse"> <span class="flex bg-green-500 w-[1rem] h-[1rem] rounded-full"></span>
+            <span>Schnupperlehre auf Anfrage möglich</span> </li>
             <li class="mt-4">
                 <button class="bg-black text-white px-16 py-2 rounded-lg" data-modal data-open-modal>Kontaktdaten</button>
             </li>
