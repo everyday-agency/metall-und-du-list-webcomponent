@@ -2,6 +2,7 @@ import { fetchBerufsberatungData } from '../lib/fetchData.js';
 import { fetchCantonData } from '../lib/fetchCantons.js';
 import { renderPagination } from './Pagination.js';
 import { renderSelectFilter } from './Filters.js';
+import { renderCard } from './Card.js';
 
 export class DataList extends HTMLElement {
     static properties = {
@@ -116,7 +117,7 @@ export class DataList extends HTMLElement {
         wrapper.className = 'pt-4';
 
         currentItems.forEach((item) => {
-            wrapper.appendChild(this.renderCard(item));
+            wrapper.appendChild(renderCard(item));
         });
 
         this.appendChild(wrapper);
@@ -164,135 +165,6 @@ export class DataList extends HTMLElement {
         });
 
         this.appendChild(container);
-    }
-
-    renderSelectFilter({
-        labelText,
-        options,
-        selectedValue,
-        onChange,
-        defaultOptionText = 'Alle auswählen',
-    }) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'mb-4';
-
-        const label = document.createElement('label');
-        label.textContent = labelText;
-        label.className = 'mr-2';
-
-        const select = document.createElement('select');
-        select.className = 'p-2 border rounded';
-        select.innerHTML = `<option value="">${defaultOptionText}</option>`;
-
-        options.forEach((opt) => {
-            const option = document.createElement('option');
-            option.value = opt;
-            option.textContent = opt;
-            select.appendChild(option);
-        });
-
-        select.value = selectedValue || '';
-        select.addEventListener('change', (e) => onChange(e.target.value));
-
-        wrapper.appendChild(label);
-        wrapper.appendChild(select);
-        this.appendChild(wrapper);
-    }
-
-    renderCard(item) {
-        const ul = document.createElement('ul');
-        ul.className = 'mb-4 p-4 border rounded bg-gray-50';
-
-        const titleLi = document.createElement('li');
-        titleLi.textContent = item.professionNameDeMf;
-        titleLi.className = 'text-sm';
-
-        const nameLi = document.createElement('li');
-        nameLi.textContent = item.locationName;
-        nameLi.className = 'font-bold text-2xl';
-
-        const streetLi = document.createElement('li');
-        streetLi.textContent =
-            item.locationStreet + ' ' + item.locationHouseNumber;
-
-        const zipCodeLi = document.createElement('li');
-        zipCodeLi.textContent =
-            item.locationZipCode + ' ' + item.locationLocalityNameDe;
-
-        ul.appendChild(titleLi);
-        ul.appendChild(nameLi);
-        ul.appendChild(streetLi);
-        ul.appendChild(zipCodeLi);
-
-        return ul;
-    }
-
-    renderPagination() {
-        const totalPages = Math.ceil(
-            this.filteredData.length / this.itemsPerPage
-        );
-        if (totalPages <= 1) return;
-
-        const nav = document.createElement('nav');
-        nav.className = 'flex gap-2 my-4 flex-wrap justify-center';
-
-        const createButton = (
-            label,
-            page,
-            isActive = false,
-            disabled = false
-        ) => {
-            const btn = document.createElement('button');
-            btn.textContent = label;
-            btn.className = `px-3 py-1 rounded border transition ${
-                isActive
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white hover:bg-gray-100'
-            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`;
-
-            if (!disabled) {
-                btn.addEventListener('click', () => {
-                    this.currentPage = page;
-                    this.render();
-                    this.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                });
-            }
-
-            return btn;
-        };
-
-        nav.appendChild(
-            createButton(
-                '« Prev',
-                this.currentPage - 1,
-                false,
-                this.currentPage === 1
-            )
-        );
-
-        const maxVisible = 7;
-        let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
-        let end = start + maxVisible - 1;
-
-        if (end > totalPages) {
-            end = totalPages;
-            start = Math.max(1, end - maxVisible + 1);
-        }
-
-        for (let i = start; i <= end; i++) {
-            nav.appendChild(createButton(i, i, i === this.currentPage));
-        }
-
-        nav.appendChild(
-            createButton(
-                'Next »',
-                this.currentPage + 1,
-                false,
-                this.currentPage === totalPages
-            )
-        );
-
-        this.appendChild(nav);
     }
 }
 
