@@ -1,5 +1,7 @@
 import { fetchBerufsberatungData } from '../lib/fetchData.js';
 import { fetchCantonData } from '../lib/fetchCantons.js';
+import { renderPagination } from './Pagination.js';
+import { renderSelectFilter } from './Filters.js';
 
 export class DataList extends HTMLElement {
     static properties = {
@@ -119,28 +121,49 @@ export class DataList extends HTMLElement {
 
         this.appendChild(wrapper);
 
-        this.renderPagination();
+        const paginationContainer = document.createElement('div');
+        renderPagination({
+            container: paginationContainer,
+            currentPage: this.currentPage,
+            totalItems: this.filteredData.length,
+            itemsPerPage: this.itemsPerPage,
+            onPageChange: (page) => {
+                this.currentPage = page;
+                this.render();
+            },
+        });
+        this.appendChild(paginationContainer);
     }
 
     renderCantonsFilter() {
         const cantonOptions = Object.keys(this.cantons).sort();
-        this.renderSelectFilter({
+        const container = document.createElement('div');
+
+        renderSelectFilter({
+            container,
             labelText: 'Kanton wählen:',
             options: cantonOptions,
             selectedValue: this.selectedCanton,
             onChange: this.handleCantonChange.bind(this),
             defaultOptionText: 'Alle Kantone',
         });
+
+        this.appendChild(container);
     }
 
     renderFilterProfessionDropdown() {
-        this.renderSelectFilter({
+        const container = document.createElement('div');
+
+        renderSelectFilter({
+            container,
             labelText: 'Ausbildungsberuf wählen:',
             options: this.professions,
             selectedValue: this.selectProfession,
             onChange: this.handleProfessionChange.bind(this),
             defaultOptionText: 'Alle Ausbildungsberufe',
         });
+
+        this.appendChild(container);
     }
 
     renderSelectFilter({
