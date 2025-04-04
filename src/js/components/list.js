@@ -1,4 +1,3 @@
-// components/list.js
 import { fetchBerufsberatungData } from '../lib/fetchData.js';
 import { fetchCantonData } from '../lib/fetchCantons.js';
 
@@ -11,7 +10,9 @@ export class DataList extends HTMLElement {
         itemsPerPage: { type: Number },
         filteredData: { type: Array },
         cantons: { type: Object },
+        professions: { type: Array },
         selectedCanton: { type: String },
+        selectProfession: { type: String },
     };
 
     constructor() {
@@ -23,7 +24,13 @@ export class DataList extends HTMLElement {
         this.itemsPerPage = 10;
         this.filteredData = [];
         this.cantons = {};
+        this.professions = [
+            'Metallbauer/-in (Metallbau) EFZ',
+            'Metallbaukonstrukteur/-in EFZ',
+            'Metallbaupraktiker/-in EBA',
+        ];
         this.selectedCanton = null;
+        this.selectProfession = null;
     }
 
     connectedCallback() {
@@ -57,17 +64,31 @@ export class DataList extends HTMLElement {
 
     handleCantonChange(cantonCode) {
         this.selectedCanton = cantonCode;
+        this.applyFilters();
+    }
+
+    handleProfessionChange(profession) {
+        this.selectProfession = profession;
+        this.applyFilters();
+    }
+
+    applyFilters() {
+        const filteredByCanton = this.selectedCanton
+            ? this.data.filter((item) =>
+                  this.cantons[this.selectedCanton]?.has(
+                      String(item.locationZipCode)
+                  )
+              )
+            : this.data;
+
+        const filteredByProfession = this.selectProfession
+            ? filteredByCanton.filter(
+                  (item) => item.professionNameDeMf === this.selectProfession
+              )
+            : filteredByCanton;
+
+        this.filteredData = filteredByProfession;
         this.currentPage = 1;
-
-        if (!cantonCode || !this.cantons[cantonCode]) {
-            this.filteredData = this.data;
-        } else {
-            const zipSet = this.cantons[cantonCode];
-            this.filteredData = this.data.filter((item) =>
-                zipSet.has(String(item.locationZipCode))
-            );
-        }
-
         this.render();
     }
 
@@ -82,7 +103,8 @@ export class DataList extends HTMLElement {
             return;
         }
 
-        this.renderFilterDropdown(); // ← Add this line!
+        this.renderFilterDropdown();
+        this.renderFilterProfessionDropdown();
 
         const start = (this.currentPage - 1) * this.itemsPerPage;
         const end = start + this.itemsPerPage;
@@ -97,7 +119,7 @@ export class DataList extends HTMLElement {
 
         this.appendChild(wrapper);
 
-        this.renderPagination(); // remains unchanged
+        this.renderPagination();
     }
 
     renderFilterDropdown() {
@@ -117,7 +139,7 @@ export class DataList extends HTMLElement {
             .forEach((code) => {
                 const option = document.createElement('option');
                 option.value = code;
-                option.textContent = code; // Optional: replace with full name mapping if desired
+                option.textContent = code;
                 select.appendChild(option);
             });
 
@@ -131,16 +153,46 @@ export class DataList extends HTMLElement {
         this.appendChild(wrapper);
     }
 
+    renderFilterProfessionDropdown() {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'mb-4';
+
+        const label = document.createElement('label');
+        label.textContent = 'Ausbildungsberuf wählen:';
+        label.className = 'mr-2';
+
+        const select = document.createElement('select');
+        select.className = 'p-2 border rounded';
+        select.innerHTML = `<option value="">Alle Ausbildungsberufe</option>`;
+
+        this.professions.forEach((profession) => {
+            const option = document.createElement('option');
+            option.value = profession;
+            option.textContent = profession;
+            select.appendChild(option);
+        });
+
+        select.value = this.selectProfession || '';
+        select.addEventListener('change', (e) =>
+            this.handleProfessionChange(e.target.value)
+        );
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(select);
+        this.appendChild(wrapper);
+    }
+
     renderCard(item) {
         const ul = document.createElement('ul');
         ul.className = 'mb-4 p-4 border rounded bg-gray-50';
 
         const titleLi = document.createElement('li');
         titleLi.textContent = item.professionNameDeMf;
-        titleLi.className = 'font-bold text-lg';
+        titleLi.className = 'text-sm';
 
         const nameLi = document.createElement('li');
         nameLi.textContent = item.locationName;
+        nameLi.className = 'font-bold text-2xl';
 
         const streetLi = document.createElement('li');
         streetLi.textContent =
@@ -159,7 +211,6 @@ export class DataList extends HTMLElement {
     }
 
     renderPagination() {
-        // const totalPages = Math.ceil(this.data.length / this.itemsPerPage);
         const totalPages = Math.ceil(
             this.filteredData.length / this.itemsPerPage
         );
@@ -168,7 +219,6 @@ export class DataList extends HTMLElement {
         const nav = document.createElement('nav');
         nav.className = 'flex gap-2 my-4 flex-wrap justify-center';
 
-        // Helper to create a page button
         const createButton = (
             label,
             page,
@@ -194,7 +244,6 @@ export class DataList extends HTMLElement {
             return btn;
         };
 
-        // Previous button
         nav.appendChild(
             createButton(
                 '« Prev',
@@ -204,7 +253,6 @@ export class DataList extends HTMLElement {
             )
         );
 
-        // Pagination logic
         const maxVisible = 7;
         let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
         let end = start + maxVisible - 1;
@@ -218,7 +266,6 @@ export class DataList extends HTMLElement {
             nav.appendChild(createButton(i, i, i === this.currentPage));
         }
 
-        // Next button
         nav.appendChild(
             createButton(
                 'Next »',
