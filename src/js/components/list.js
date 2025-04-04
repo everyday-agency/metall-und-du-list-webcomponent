@@ -103,7 +103,7 @@ export class DataList extends HTMLElement {
             return;
         }
 
-        this.renderFilterDropdown();
+        this.renderCantonsFilter();
         this.renderFilterProfessionDropdown();
 
         const start = (this.currentPage - 1) * this.itemsPerPage;
@@ -122,60 +122,54 @@ export class DataList extends HTMLElement {
         this.renderPagination();
     }
 
-    renderFilterDropdown() {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'mb-4';
-
-        const label = document.createElement('label');
-        label.textContent = 'Kanton wählen:';
-        label.className = 'mr-2';
-
-        const select = document.createElement('select');
-        select.className = 'p-2 border rounded';
-        select.innerHTML = `<option value="">Alle Kantone</option>`;
-
-        Object.keys(this.cantons)
-            .sort()
-            .forEach((code) => {
-                const option = document.createElement('option');
-                option.value = code;
-                option.textContent = code;
-                select.appendChild(option);
-            });
-
-        select.value = this.selectedCanton || '';
-        select.addEventListener('change', (e) =>
-            this.handleCantonChange(e.target.value)
-        );
-
-        wrapper.appendChild(label);
-        wrapper.appendChild(select);
-        this.appendChild(wrapper);
+    renderCantonsFilter() {
+        const cantonOptions = Object.keys(this.cantons).sort();
+        this.renderSelectFilter({
+            labelText: 'Kanton wählen:',
+            options: cantonOptions,
+            selectedValue: this.selectedCanton,
+            onChange: this.handleCantonChange.bind(this),
+            defaultOptionText: 'Alle Kantone',
+        });
     }
 
     renderFilterProfessionDropdown() {
+        this.renderSelectFilter({
+            labelText: 'Ausbildungsberuf wählen:',
+            options: this.professions,
+            selectedValue: this.selectProfession,
+            onChange: this.handleProfessionChange.bind(this),
+            defaultOptionText: 'Alle Ausbildungsberufe',
+        });
+    }
+
+    renderSelectFilter({
+        labelText,
+        options,
+        selectedValue,
+        onChange,
+        defaultOptionText = 'Alle auswählen',
+    }) {
         const wrapper = document.createElement('div');
         wrapper.className = 'mb-4';
 
         const label = document.createElement('label');
-        label.textContent = 'Ausbildungsberuf wählen:';
+        label.textContent = labelText;
         label.className = 'mr-2';
 
         const select = document.createElement('select');
         select.className = 'p-2 border rounded';
-        select.innerHTML = `<option value="">Alle Ausbildungsberufe</option>`;
+        select.innerHTML = `<option value="">${defaultOptionText}</option>`;
 
-        this.professions.forEach((profession) => {
+        options.forEach((opt) => {
             const option = document.createElement('option');
-            option.value = profession;
-            option.textContent = profession;
+            option.value = opt;
+            option.textContent = opt;
             select.appendChild(option);
         });
 
-        select.value = this.selectProfession || '';
-        select.addEventListener('change', (e) =>
-            this.handleProfessionChange(e.target.value)
-        );
+        select.value = selectedValue || '';
+        select.addEventListener('change', (e) => onChange(e.target.value));
 
         wrapper.appendChild(label);
         wrapper.appendChild(select);
