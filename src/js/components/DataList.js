@@ -113,23 +113,73 @@ export class DataList extends HTMLElement {
             return;
         }
 
-        const start = (this.currentPage - 1) * this.itemsPerPage;
-        const end = start + this.itemsPerPage;
-        const currentItems = this.filteredData.slice(start, end);
-
         const wrapper = document.createElement('div');
         wrapper.className = 'pt-4';
         wrapper.id = 'data-list-wrapper';
 
+        // Render filters
         this.renderCantonsFilter(wrapper);
         this.renderFilterProfessionDropdown(wrapper);
 
-        currentItems.forEach((item) => {
-            wrapper.appendChild(renderCard(item, this.fetching));
-        });
+        if (this.fetching) {
+            for (let i = 0; i < this.itemsPerPage; i++) {
+                wrapper.appendChild(renderCard(null, true));
+            }
+        } else {
+            // ✅ Step 1: Split full filtered data
+            const openJobs = this.filteredData.filter(
+                (item) => item.apprenticeshipPlaceSchoolYears?.length > 0
+            );
+            const otherJobs = this.filteredData.filter(
+                (item) => !item.apprenticeshipPlaceSchoolYears?.length
+            );
+
+            // ✅ Step 2: Combine open first, then others
+            const groupedData = [...openJobs, ...otherJobs];
+
+            // ✅ Step 3: Apply pagination to full list
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            const currentItems = groupedData.slice(start, end);
+
+            // ✅ Step 4: Check what's visible and render headline accordingly
+            const visibleOpen = currentItems.filter((item) =>
+                openJobs.includes(item)
+            );
+            const visibleOther = currentItems.filter((item) =>
+                otherJobs.includes(item)
+            );
+
+            if (visibleOpen.length) {
+                const heading = document.createElement('h2');
+                heading.textContent = 'Offene Lehrstellen';
+                heading.className = 'text-xl font-bold mt-8 mb-4';
+                wrapper.appendChild(heading);
+
+                visibleOpen.forEach((item) =>
+                    wrapper.appendChild(renderCard(item, false))
+                );
+            }
+
+            if (visibleOther.length) {
+                const heading = document.createElement('h2');
+                heading.textContent = 'Weitere Betriebe';
+                heading.className = 'text-xl font-bold mt-8 mb-4';
+                wrapper.appendChild(heading);
+
+                visibleOther.forEach((item) =>
+                    wrapper.appendChild(renderCard(item, false))
+                );
+            }
+
+            if (!visibleOpen.length && !visibleOther.length) {
+                wrapper.innerHTML += `<p class="text-gray-500">Keine Einträge gefunden.</p>`;
+            }
+        }
 
         this.appendChild(wrapper);
 
+        // ✅ Pagination now works on grouped full list
         const paginationContainer = document.createElement('div');
         renderPagination({
             container: paginationContainer,
@@ -139,11 +189,10 @@ export class DataList extends HTMLElement {
             onPageChange: async (page) => {
                 this.currentPage = page;
                 this.fetching = true;
-                this.render(); // show skeletons immediately
-
-                await delay(300); // simulate transition
+                this.render();
+                await delay(300);
                 this.fetching = false;
-                this.render(); // render actual data
+                this.render();
             },
         });
         this.appendChild(paginationContainer);
