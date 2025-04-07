@@ -21,7 +21,11 @@ export function renderPagination({
         if (!disabled) {
             btn.addEventListener('click', () => {
                 onPageChange(page);
-                container.scrollIntoView({
+                // container.scrollIntoView({
+                //     behavior: 'smooth',
+                //     block: 'start',
+                // });
+                document.querySelector('#data-list-wrapper')?.scrollIntoView({
                     behavior: 'smooth',
                     block: 'start',
                 });

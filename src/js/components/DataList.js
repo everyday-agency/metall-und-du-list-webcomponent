@@ -65,14 +65,26 @@ export class DataList extends HTMLElement {
         return cantonGroups;
     }
 
-    handleCantonChange(cantonCode) {
+    async handleCantonChange(cantonCode) {
         this.selectedCanton = cantonCode;
-        this.applyFilters();
+        this.fetching = true;
+        this.render(); // show skeleton
+
+        await delay(300);
+        this.applyFilters(); // already calls render
+        this.fetching = false;
+        this.render();
     }
 
-    handleProfessionChange(profession) {
+    async handleProfessionChange(profession) {
         this.selectProfession = profession;
-        this.applyFilters();
+        this.fetching = true;
+        this.render(); // show skeleton
+
+        await delay(300);
+        this.applyFilters(); // already calls render
+        this.fetching = false;
+        this.render();
     }
 
     applyFilters() {
@@ -92,22 +104,14 @@ export class DataList extends HTMLElement {
 
         this.filteredData = filteredByProfession;
         this.currentPage = 1;
-        this.render();
     }
 
     render() {
         this.innerHTML = '';
-        if (this.fetching) {
-            this.innerHTML = '<p>Loading...</p>';
-            return;
-        }
         if (this.error) {
             this.innerHTML = `<p>Error: ${this.error}</p>`;
             return;
         }
-
-        this.renderCantonsFilter();
-        this.renderFilterProfessionDropdown();
 
         const start = (this.currentPage - 1) * this.itemsPerPage;
         const end = start + this.itemsPerPage;
@@ -115,9 +119,13 @@ export class DataList extends HTMLElement {
 
         const wrapper = document.createElement('div');
         wrapper.className = 'pt-4';
+        wrapper.id = 'data-list-wrapper';
+
+        this.renderCantonsFilter(wrapper);
+        this.renderFilterProfessionDropdown(wrapper);
 
         currentItems.forEach((item) => {
-            wrapper.appendChild(renderCard(item));
+            wrapper.appendChild(renderCard(item, this.fetching));
         });
 
         this.appendChild(wrapper);
@@ -128,15 +136,20 @@ export class DataList extends HTMLElement {
             currentPage: this.currentPage,
             totalItems: this.filteredData.length,
             itemsPerPage: this.itemsPerPage,
-            onPageChange: (page) => {
+            onPageChange: async (page) => {
                 this.currentPage = page;
-                this.render();
+                this.fetching = true;
+                this.render(); // show skeletons immediately
+
+                await delay(300); // simulate transition
+                this.fetching = false;
+                this.render(); // render actual data
             },
         });
         this.appendChild(paginationContainer);
     }
 
-    renderCantonsFilter() {
+    renderCantonsFilter(wrapper) {
         const cantonOptions = Object.keys(this.cantons).sort();
         const container = document.createElement('div');
 
@@ -150,9 +163,10 @@ export class DataList extends HTMLElement {
         });
 
         this.appendChild(container);
+        wrapper.appendChild(container);
     }
 
-    renderFilterProfessionDropdown() {
+    renderFilterProfessionDropdown(wrapper) {
         const container = document.createElement('div');
 
         renderSelectFilter({
@@ -165,7 +179,12 @@ export class DataList extends HTMLElement {
         });
 
         this.appendChild(container);
+        wrapper.appendChild(container);
     }
 }
 
 customElements.define('data-list', DataList);
+
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
