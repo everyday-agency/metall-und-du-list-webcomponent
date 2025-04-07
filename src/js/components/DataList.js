@@ -126,7 +126,6 @@ export class DataList extends HTMLElement {
                 wrapper.appendChild(renderCard(null, true));
             }
         } else {
-            // ✅ Step 1: Split full filtered data
             const openJobs = this.filteredData.filter(
                 (item) => item.apprenticeshipPlaceSchoolYears?.length > 0
             );
@@ -134,15 +133,12 @@ export class DataList extends HTMLElement {
                 (item) => !item.apprenticeshipPlaceSchoolYears?.length
             );
 
-            // ✅ Step 2: Combine open first, then others
             const groupedData = [...openJobs, ...otherJobs];
 
-            // ✅ Step 3: Apply pagination to full list
             const start = (this.currentPage - 1) * this.itemsPerPage;
             const end = start + this.itemsPerPage;
             const currentItems = groupedData.slice(start, end);
 
-            // ✅ Step 4: Check what's visible and render headline accordingly
             const visibleOpen = currentItems.filter((item) =>
                 openJobs.includes(item)
             );
